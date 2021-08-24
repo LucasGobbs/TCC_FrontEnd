@@ -7,83 +7,26 @@
   import TabBar from "./TabBar/TabBar.svelte";
   import { Col, Row, Container, Form, FormGroup, FormText, Input, Label } from "sveltestrap";
   import { User, EditorSession } from "./user.js";
+  import CodeMirror from "./Codemirror/index.js";
   let project_explorer = new Root(default_folder);
-  import CodeMirror from "./codemirror/index.js";
+
   import { Tab, Tabs } from "./TabBar/TabBar";
   import { default_folder, Root } from "./Explorer/Explorer";
   import { onMount } from "svelte";
-  const sample_code = [
-    `class Client {
-    public readonly id: number;
-    public socket: WebSocket;
-    constructor(id: number, socket: WebSocket){
-        this.id = id
-        this.socket = socket
-        this.socket.send('Client Created')
-    }
-    public message(data: string): void {
-        this.socket.send(data);
-    }
-    static from_url(url: string, socket: WebSocket){
-        return new Client(Client.parse_url(url), socket)
-    }
-    static parse_url(url: string){
-        return parseInt(url.substr(1), 10)
-    }
-}
-`,
-    `
-class Room {
-    private id: number
-    private clients:  {[key: number]: Client } = {}
-    private name: string
-    private data: any
-    constructor(name: string, data?: any){
-        this.name = name
-        
-        this.data = data;
-        
-    }
-    add(client: Client){
-        this.clients[client.id] = client
-        if(this.data){
-            console.log("mandando")
-            client.message(JSON.stringify(this.data))
-        }
-    }
-    remove(id: number){
-        delete this.clients[id]
-    }
-}
-`,
-    `
-const connection =  function(this: WebSocket.Server, socket: WebSocket, req: http.IncomingMessage) {
-    // console.log(this)
-    SocketServerInstance.waiting_room.add(Client.from_url(req.url, socket))
-    socket.on('message', function incoming(data) {
-        console.log("Mensagem recebida: ", data)
-        socket.send("Mensagem recebida meu parceiro")
-        //this.wss.send("Sua mensagem foi recebida")
-    })
-    console.log(SocketServerInstance.waiting_room)
-}
-`,
-  ];
-  let tab_list = [];
+
   let tabs: Tabs = new Tabs([]);
-  tab_list.push({ title: "client.ts", data: sample_code[0] });
-  tab_list.push({ title: "room.ts", data: sample_code[1] });
+
   let options = {
     mode: "javascript",
     lineNumbers: true,
     theme: "dracula",
-    value: tab_list[0].data,
+    value: "", //tab_list[0].data,
   };
 
-  const open_tab = (idx) => {
-    options.value = tab_list[idx].data;
-    return options;
-  };
+  // const open_tab = (idx) => {
+  //   options.value = tab_list[idx].data;
+  //   return options;
+  // };
   let editor;
 
   let editorSession = new EditorSession();
@@ -193,15 +136,9 @@ const connection =  function(this: WebSocket.Server, socket: WebSocket, req: htt
           <TabBar on:TabSelected={handle_select_tab} bind:tabs />
         </div>
 
-        <div style="height: 95%;">
-          <CodeMirror
-            on:activity={cursorMoved}
-            on:changes={changes}
-            on:change={changed}
-            bind:editor
-            options={open_tab(0)}
-            class="editor"
-          />
+        <div style="height: 95%; width: calc(100%);" class=" max-w-full">
+          <CodeMirror on:activity={cursorMoved} on:changes={changes} on:change={changed} bind:editor {options} class="editor" />
+          <!-- <CodeMirror bind:this={editor} on:change={changes} /> -->
         </div>
       </div>
       {#if avatar_bar}
